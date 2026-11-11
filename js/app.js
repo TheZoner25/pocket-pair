@@ -3,7 +3,7 @@
    setAct, setOv, after, crtOn, nameOf, herName, rockyName, NOWWX, soundOn, AC, clockStr. */
 (function () {
   'use strict';
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.1.0';
   const $ = s => document.querySelector(s);
   const other = w => (w === 'rocky' ? 'her' : 'rocky');
   let ME = null, P = null, partnerOnline = null, partnerSeen = 0, netOk = true, loop = null;
@@ -206,6 +206,59 @@
     try { if (on && navigator.wakeLock && document.visibilityState === 'visible') lock = await navigator.wakeLock.request('screen'); else if (!on && lock) { await lock.release(); lock = null; } } catch (e) {}
   }
 
+  /* ------------------------------------------------------------ push notifications */
+  const NOTIFY = {
+    reg: null,
+    supported: () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window,
+    ios: () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+    standalone: () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches,
+    prefs() { return { status: $('#n-status').checked, love: $('#n-love').checked, notes: $('#n-notes').checked }; },
+    key() { const b = (window.PAIR_CONFIG.vapidPublicKey || '').replace(/-/g, '+').replace(/_/g, '/'); const raw = atob(b + '='.repeat((4 - b.length % 4) % 4)); return Uint8Array.from(raw, c => c.charCodeAt(0)); },
+    async sub() { if (!this.reg) return null; try { return await this.reg.pushManager.getSubscription(); } catch (e) { return null; } },
+    show(on, text) {
+      const btn = $('#notify-btn'); btn.textContent = on ? 'Turn off notifications' : 'Turn on notifications';
+      btn.classList.toggle('primary', !on); btn.dataset.on = on ? '1' : '';
+      $('#notify-kinds').querySelectorAll('input').forEach(i => { i.disabled = !on; });
+      if (text) $('#notify-msg').textContent = text;
+      $('#nudge').hidden = on || !this.canAsk() || pref.get('nudged', false) || NET.mode !== 'live';
+    },
+    canAsk() { return this.supported() && Notification.permission !== 'denied' && !!(window.PAIR_CONFIG && window.PAIR_CONFIG.vapidPublicKey); },
+    async init() {
+      ['status', 'love', 'notes'].forEach(k => { const el = $('#n-' + k); el.checked = pref.get('n-' + k, true);
+        el.addEventListener('change', async () => { pref.set('n-' + k, el.checked); const sb = await this.sub(); if (sb) NET.pushSave(sb, this.prefs()).catch(() => {}); }); });
+      $('#notify-btn').addEventListener('click', () => ($('#notify-btn').dataset.on ? this.off() : this.on()));
+      $('#nudge-on').addEventListener('click', () => { pref.set('nudged', true); this.on(); });
+      $('#nudge-later').addEventListener('click', () => { pref.set('nudged', true); $('#nudge').hidden = true; });
+      if (NET.mode !== 'live') { $('#notify-btn').disabled = true; this.show(false, 'Notifications work once you sign in. The demo can’t send any.'); return; }
+      if (!this.supported()) {
+        $('#notify-btn').disabled = true;
+        this.show(false, this.ios() && !this.standalone()
+          ? 'On iPhone, add Pocket Pair to your Home Screen first (Share, then Add to Home Screen), open it from there, and turn this on.'
+          : 'This browser can’t show notifications from a web page.');
+        $('#nudge').hidden = true; return;
+      }
+      try { this.reg = await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready; } catch (e) { this.show(false, 'Notifications could not start in this browser.'); return; }
+      const sb = await this.sub();
+      if (sb && Notification.permission === 'granted') { this.show(true, 'Notifications are on for this device.'); NET.pushSave(sb, this.prefs()).catch(() => {}); }
+      else this.show(false, Notification.permission === 'denied' ? 'Notifications are blocked for this site. Allow them in the browser or phone settings, then reload.' : null);
+    },
+    async on() {
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') { this.show(false, 'Notifications were not allowed. You can allow them later in the browser or phone settings.'); return; }
+        let sb = await this.sub();
+        if (!sb) sb = await this.reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.key() });
+        await NET.pushSave(sb, this.prefs());
+        this.show(true, 'Notifications are on for this device.'); ME.toast = { s: 'NOTIFICATIONS ON', t0: TICK };
+      } catch (e) { console.error(e); this.show(false, 'Could not turn notifications on. Check the connection and try again.'); }
+    },
+    async off() {
+      const sb = await this.sub();
+      if (sb) { try { await NET.pushRemove(sb.endpoint); } catch (e) {} try { await sb.unsubscribe(); } catch (e) {} }
+      this.show(false, 'Notifications are off for this device.');
+    }
+  };
+
   /* ------------------------------------------------------------ views */
   function show(id) {
     document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== id; });
@@ -260,6 +313,7 @@
     $('#update').addEventListener('click', () => location.reload());
 
     STUDIO.init();
+    NOTIFY.init();
     connLabel();
     if (NET.mode === 'demo') { partnerOnline = true; connLabel(); }
 

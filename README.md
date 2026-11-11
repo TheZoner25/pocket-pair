@@ -16,7 +16,10 @@ from the Studio, real weather for Lappeenranta and Helsinki.
 | `js/app.js` | Switches, click sound + vibration, recording, playback, settings, update check |
 | `config.js` | Supabase address and public key |
 | `version.json` | The newest version number, checked by open apps |
+| `sw.js` | Service worker: shows notifications, opens the app when one is tapped (caches nothing) |
 | `supabase/schema.sql` | The database setup (already applied to "Tamagachi for Two") |
+| `supabase/notifications.sql` | Notification tables and triggers (already applied) |
+| `supabase/functions/pair-notify/` | Edge function that sends the notifications (already deployed) |
 
 ## 1. Supabase (one setting left)
 
@@ -69,6 +72,19 @@ Within 10 minutes, open apps show **"A new version is ready. Tap to update."**
 ## Demo
 
 Add `#demo` to the link to try it without signing in. The other person is pretend.
+
+## Notifications
+
+Settings → **Turn on notifications** on each phone or computer. You can choose status changes,
+hearts, and voice notes / pixel art separately. Nothing is sent while the other person has the
+app open on screen.
+
+- **Android / computer:** works in Chrome, Edge and Firefox straight away.
+- **iPhone:** iOS 16.4 or newer, and only from the Home Screen app: Share → Add to Home Screen,
+  open it from there, then turn notifications on.
+
+How it works: a change in the database → a trigger → the `pair-notify` edge function → Web Push.
+The push keys are in `pair_config`, which the app can't read.
 
 ## Notes
 

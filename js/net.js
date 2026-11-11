@@ -62,7 +62,14 @@
     await NET.resync(true);
     subscribe();
     heartbeat(); setInterval(heartbeat, 60000);
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { heartbeat(); NET.resync(false).catch(e => NET.emit('onError', e)); } else heartbeat(); });
+    // "app is open" flag: while it is set, the server skips push notifications for me
+    NET.visible(document.visibilityState === 'visible');
+    setInterval(() => { if (document.visibilityState === 'visible') NET.visible(true); }, 30000);
+    document.addEventListener('visibilitychange', () => {
+      const on = document.visibilityState === 'visible'; NET.visible(on);
+      if (on) { heartbeat(); NET.resync(false).catch(e => NET.emit('onError', e)); } else heartbeat();
+    });
+    window.addEventListener('pagehide', () => NET.visible(false));
     window.addEventListener('online', () => NET.emit('onNet', true));
     window.addEventListener('offline', () => NET.emit('onNet', false));
   };
@@ -166,6 +173,22 @@
     if (NET.mode === 'demo' || !note || !note.id) return;
     NET.sb.from('pair_events').update({ seen: true }).eq('id', note.id).then(() => {});
   };
+
+  NET.visible = function (on) {
+    if (NET.mode !== 'live' || !NET.me) return;
+    const until = on ? new Date(Date.now() + 45000).toISOString() : new Date(0).toISOString();
+    NET.sb.from('pair_status').update({ visible_until: until }).eq('who', NET.me).then(() => {});
+  };
+
+  /* Push notifications: one row per phone/computer, with what that device wants to hear about. */
+  NET.pushSave = async function (sub, prefs) {
+    const j = sub.toJSON();
+    await q(NET.sb.from('pair_push_subs').upsert({
+      endpoint: j.endpoint, who: NET.me, p256dh: j.keys.p256dh, auth: j.keys.auth,
+      want_status: !!prefs.status, want_love: !!prefs.love, want_notes: !!prefs.notes
+    }, { onConflict: 'endpoint' }));
+  };
+  NET.pushRemove = async endpoint => q(NET.sb.from('pair_push_subs').delete().eq('endpoint', endpoint));
 
   NET.setName = async function (name) {
     NET.names[NET.me] = name;

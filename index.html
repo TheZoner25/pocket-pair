@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=1.0.0">
+<link rel="stylesheet" href="css/app.css?v=1.1.0">
 </head>
 <body data-who="rocky">
 
@@ -86,6 +86,10 @@
           </div>
         </div>
       </div>
+      <div class="nudge" id="nudge" hidden>
+        <p>Get a notification when <span class="pname">she</span> changes status or sends you something, even when the app is closed.</p>
+        <div class="row2"><button class="btn primary" id="nudge-on">Turn on</button><button class="btn" id="nudge-later">Not now</button></div>
+      </div>
       <p class="hint" id="hint">MODE changes your status. LOVE sends a heart. Tap REC for your inbox, hold it to record.</p>
       <p class="kbd">Keyboard: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>, hold <kbd>3</kbd> to record</p>
     </section>
@@ -131,6 +135,17 @@
           <label class="tog"><input type="checkbox" id="set-awake"> Keep the screen on (desk mode)</label>
           <p class="small" id="haptic-note"></p>
         </div>
+        <div class="set" id="set-notify-box">
+          <h2>Notifications</h2>
+          <p class="small" id="notify-msg">Get a notification on this phone or computer when <span class="pname">she</span> does something, even when the app is closed.</p>
+          <button class="btn primary" id="notify-btn">Turn on notifications</button>
+          <div class="toggles" id="notify-kinds">
+            <label class="tog"><input type="checkbox" id="n-status"> Status changes</label>
+            <label class="tog"><input type="checkbox" id="n-love"> Hearts</label>
+            <label class="tog"><input type="checkbox" id="n-notes"> Voice notes and pixel art</label>
+          </div>
+          <p class="small">No notifications arrive while the app is open on screen, because you already see it there.</p>
+        </div>
         <div class="set">
           <h2>Put it on your home screen</h2>
           <p class="small"><strong>iPhone:</strong> open this page in Safari, tap Share, then Add to Home Screen.<br><strong>Android:</strong> in Chrome, tap the ⋮ menu, then Add to Home screen.</p>
@@ -156,10 +171,10 @@
 <label class="haptic-sink" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=1.0.0"></script>
-<script src="js/engine.js?v=1.0.0"></script>
-<script src="js/net.js?v=1.0.0"></script>
-<script src="js/studio.js?v=1.0.0"></script>
-<script src="js/app.js?v=1.0.0"></script>
+<script src="config.js?v=1.1.0"></script>
+<script src="js/engine.js?v=1.1.0"></script>
+<script src="js/net.js?v=1.1.0"></script>
+<script src="js/studio.js?v=1.1.0"></script>
+<script src="js/app.js?v=1.1.0"></script>
 </body>
 </html>

@@ -83,6 +83,10 @@ canvas{display:block}
 kbd{font:12px var(--display);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--ink)}
 @media (hover:none){.kbd{display:none}}
 
+.nudge{width:min(100%,460px);display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:14px;border:1px solid var(--case);background:color-mix(in srgb,var(--case) 18%,var(--panel))}
+.nudge p{margin:0;font-size:14.5px}
+#notify-kinds .tog input:disabled+*,#notify-kinds .tog:has(input:disabled){opacity:.5}
+
 /* ---------- studio ---------- */
 .studio{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);gap:24px;align-items:start}
 @media (max-width:760px){.studio{grid-template-columns:minmax(0,1fr)}}

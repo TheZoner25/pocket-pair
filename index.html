@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pocket Pair</title>
+<meta name="description" content="A pixel pet for two: share what you're doing, send hearts, voice notes and pixel art.">
+<meta name="theme-color" content="#15111c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pocket Pair">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/app.css?v=1.0.0">
+</head>
+<body data-who="rocky">
+
+<!-- sign in / join / demo -->
+<div class="gate" id="gate" hidden>
+  <div class="gate-card">
+    <div class="spec">Pocket Pair</div>
+    <h1>A pixel pet <span>for two</span></h1>
+
+    <form id="f-auth" hidden>
+      <p class="lede">Sign in to see what your person is up to.</p>
+      <label for="in-email">Email</label>
+      <input id="in-email" type="email" autocomplete="email" required>
+      <label for="in-pass">Password</label>
+      <input id="in-pass" type="password" autocomplete="current-password" minlength="6" required>
+      <div class="row2">
+        <button type="submit" class="btn primary" id="b-signin">Sign in</button>
+        <button type="button" class="btn" id="b-signup">Create account</button>
+      </div>
+      <p class="msg" id="auth-msg" role="status"></p>
+      <a class="small" href="#demo" id="l-demo">Try the demo instead</a>
+    </form>
+
+    <form id="f-join" hidden>
+      <p class="lede">One last step. Type the pair code Rocky set, and pick your seat.</p>
+      <label for="in-code">Pair code</label>
+      <input id="in-code" autocomplete="off" required>
+      <fieldset class="seats">
+        <legend>I am</legend>
+        <label><input type="radio" name="who" value="rocky" required> Rocky</label>
+        <label><input type="radio" name="who" value="her"> Hazel</label>
+      </fieldset>
+      <label for="in-name">Name on screen (letters, up to 6)</label>
+      <input id="in-name" maxlength="6" autocomplete="off" placeholder="HAZEL">
+      <button type="submit" class="btn primary">Join</button>
+      <p class="msg" id="join-msg" role="status"></p>
+    </form>
+
+    <div id="f-demo" hidden>
+      <p class="lede">Demo mode: nothing leaves this browser, and the other person is pretend. Pick who you want to be.</p>
+      <div class="row2">
+        <button class="btn primary" data-demo="rocky">Be Rocky</button>
+        <button class="btn primary" data-demo="her">Be Hazel</button>
+      </div>
+      <p class="msg" id="demo-msg"></p>
+    </div>
+  </div>
+</div>
+
+<!-- the app -->
+<div class="app" id="app" hidden>
+  <header class="bar">
+    <b class="logo">POCKET PAIR</b>
+    <span class="conn" id="conn"><i></i><span id="conn-txt">Connecting…</span></span>
+  </header>
+
+  <main>
+    <section class="view" id="v-device" aria-label="Device">
+      <div class="device">
+        <div class="shell">
+          <div class="top"><div class="leds" aria-label="Status lights"><i></i><i></i><i></i></div><span class="tag" id="demo-tag" hidden>DEMO</span></div>
+          <div class="bezel"><canvas id="screen" width="160" height="128" aria-label="Pet screen"></canvas></div>
+          <div class="plate">
+            <button class="sw" id="k-mode" style="--stem:#f4f1ec;--stem-d:#c4bdb3"><span class="housing"><span class="stem"></span></span><span class="silk">MODE</span></button>
+            <button class="sw" id="k-love" style="--stem:#ffa6bb;--stem-d:#cf6a85"><span class="housing"><span class="stem"></span></span><span class="silk">LOVE</span></button>
+            <button class="sw" id="k-rec" style="--stem:#ff6b5f;--stem-d:#b0352c"><span class="housing"><span class="stem"></span></span><span class="silk">REC</span></button>
+          </div>
+        </div>
+      </div>
+      <p class="hint" id="hint">MODE changes your status. LOVE sends a heart. Tap REC for your inbox, hold it to record.</p>
+      <p class="kbd">Keyboard: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd>, hold <kbd>3</kbd> to record</p>
+    </section>
+
+    <section class="view" id="v-studio" aria-label="Studio" hidden>
+      <div class="studio">
+        <div class="st-main">
+          <div class="st-board"><canvas id="st-canvas" width="320" height="320" aria-label="Drawing board, 32 by 32 pixels"></canvas></div>
+          <div class="st-pal" id="st-pal" role="radiogroup" aria-label="Colours"></div>
+          <div class="st-tools" role="toolbar" aria-label="Tools">
+            <button class="tool" data-tool="pen" aria-pressed="true">Pen</button>
+            <button class="tool" data-tool="eraser" aria-pressed="false">Eraser</button>
+            <button class="tool" data-tool="fill" aria-pressed="false">Fill</button>
+            <button class="tool" id="t-mirror" aria-pressed="false">Mirror</button>
+            <button class="tool" id="t-undo">Undo</button>
+            <button class="tool" id="t-clear">Clear</button>
+          </div>
+        </div>
+        <div class="st-side">
+          <h2>On <span class="pname">her</span> screen</h2>
+          <div class="bezel small"><canvas id="st-preview" width="160" height="128" aria-label="Preview on the device"></canvas></div>
+          <div class="row2">
+            <button class="btn primary" id="st-send">Send to <span class="pname">her</span></button>
+            <button class="btn" id="st-save">Save to library</button>
+          </div>
+          <p class="msg" id="st-msg" role="status"></p>
+          <h2>Library</h2>
+          <p class="small">Saved on this phone or computer. Tap one to open it.</p>
+          <div class="lib" id="lib"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="v-settings" aria-label="Settings" hidden>
+      <div class="settings">
+        <div class="set">
+          <label for="set-name">Your name on screen</label>
+          <div class="row2"><input id="set-name" maxlength="6" autocomplete="off"><button class="btn" id="set-name-save">Save</button></div>
+        </div>
+        <div class="set toggles">
+          <label class="tog"><input type="checkbox" id="set-sound"> Click sounds</label>
+          <label class="tog"><input type="checkbox" id="set-haptic"> Vibration on each press</label>
+          <label class="tog"><input type="checkbox" id="set-awake"> Keep the screen on (desk mode)</label>
+          <p class="small" id="haptic-note"></p>
+        </div>
+        <div class="set">
+          <h2>Put it on your home screen</h2>
+          <p class="small"><strong>iPhone:</strong> open this page in Safari, tap Share, then Add to Home Screen.<br><strong>Android:</strong> in Chrome, tap the ⋮ menu, then Add to Home screen.</p>
+        </div>
+        <div class="set">
+          <p class="small" id="set-account"></p>
+          <div class="row2"><button class="btn" id="set-update">Check for updates</button><button class="btn" id="set-signout">Sign out</button></div>
+          <p class="small" id="set-version"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs" aria-label="Sections">
+    <button class="tab" data-view="v-device" aria-current="page">Device</button>
+    <button class="tab" data-view="v-studio">Studio</button>
+    <button class="tab" data-view="v-settings">Settings</button>
+  </nav>
+
+  <button class="update" id="update" hidden>A new version is ready. Tap to update.</button>
+</div>
+
+<label class="haptic-sink" aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js?v=1.0.0"></script>
+<script src="js/engine.js?v=1.0.0"></script>
+<script src="js/net.js?v=1.0.0"></script>
+<script src="js/studio.js?v=1.0.0"></script>
+<script src="js/app.js?v=1.0.0"></script>
+</body>
+</html>

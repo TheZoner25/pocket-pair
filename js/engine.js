@@ -463,10 +463,45 @@ function sShower(d){bathroom(d);const who=d.owner,x=85,y=17,pal=Object.assign({}
  for(let by=0;by<5;by++)for(let bx=0;bx<4;bx++){const c=hr(bx*7+by*13+((TICK>>3)%3))>0.5?skin:sh;g.globalAlpha=0.55;R(x+bx*3,29+by*3,3,3,c);g.globalAlpha=1}
  for(let i=0;i<4;i++){const kk=(TICK+i*9)%30;R(78+((i*7)%24),26-kk,4,2,'rgba(255,255,255,0.35)')}
  d.anchor={x,y}}
+
+/* ---------- playing Quest 2 (both rooms) ---------- */
+const VRX={rocky:118,her:90};
+function vrHeadset(who,x,y){const hy=y+(who==='rocky'?5:5);
+ R(x,hy+1,1,2,'#5c5f66');R(x+11,hy+1,1,2,'#5c5f66');                       // strap
+ R(x+1,hy,10,4,'#9aa0a8');R(x+2,hy,8,3,'#eef1f3');R(x+2,hy+3,8,1,'#cfd4d9'); // white front
+ P(x+2,hy,'#2b2b33');P(x+9,hy,'#2b2b33');P(x+2,hy+3,'#2b2b33');P(x+9,hy+3,'#2b2b33'); // 4 cameras
+ if(who==='her'){R(x,hy-1,1,1,PAL.her.h);R(x+11,hy-1,1,1,PAL.her.h)}}
+function vrArm(sx,sy,hx,hy,col,skin){const n=Math.max(Math.abs(hx-sx),Math.abs(hy-sy))||1;
+ for(let i=0;i<=n;i++){const px=Math.round(sx+(hx-sx)*i/n),py=Math.round(sy+(hy-sy)*i/n);R(px,py,2,2,col)}
+ P(hx,hy,skin);R(hx-1,hy-2,3,3,'#e9edf0');P(hx,hy-1,'#2b2b33');P(hx,hy+1,'#bfc5cc')}
+function vrBubble(x,y,who){const t=TICK;
+ P(x-4,y+15,'#ffffff');R(x-2,y+11,2,2,'#ffffff');
+ box(x,y,26,14,'#1d1240','#ffffff');
+ for(let i=0;i<5;i++){const sx=x+2+((i*7+(t>>2))%22);P(sx,y+2+(i*3)%9,'#c9b8ff')}           // stars
+ R(x+1,y+10,24,3,'#2d1f63');for(let i=0;i<6;i++)P(x+2+((i*5+t)%23),y+11,'#7a5cff');       // neon floor
+ for(let i=0;i<2;i++){const k=(t*0.6+i*11)%21,cx=Math.round(x+22-k),cy=y+4+i*3;              // cubes flying in
+  R(cx,cy,3,3,i?'#3ec7ff':'#ff4d6d');P(cx,cy,'#ffffff')}}
+function sVR(d){const who=d.owner,rr=who==='rocky',t=TICK,x=VRX[who],ph=(t>>2)%4,y=TOP+(ph===1?-1:0);
+ rr?roomRocky(d):roomHer(d,{noFrog:true});
+ // guardian boundary on the floor
+ for(let i=0;i<34;i+=2)if((i+(t>>1))%6<4)P(x-11+i,FL-1,'rgba(90,220,255,0.75)');
+ // pet watching
+ if(rr){const curious=t%60<20;dog(x-26,FL-10,{});if(curious)text('?',x-18,FL-17,'#ffe066')}
+ else frogPlush(x+20,FL-10);
+ // body + head + headset
+ const pal=PAL[who],skin=pal.s,col=pal.c;
+ person(who,x,y,{noLegs:false});vrHeadset(who,x,y);
+ // arms swing like slashing at cubes
+ const L=[[-3,8],[-2,4],[-4,11],[0,6]][ph],Rr=[[14,11],[13,5],[15,8],[11,3]][ph];
+ vrArm(x+1,y+11,x+L[0],y+L[1],col,skin);vrArm(x+9,y+11,x+Rr[0],y+Rr[1],col,skin);
+ if(ph===1&&t%16<4){P(x+15,y+2,'#fff6c8');P(x+16,y+1,'#fff6c8');P(x+14,y+1,'#fff6c8')}   // hit spark
+ vrBubble(x+16,y-15,who);
+ d.anchor={x,y}}
 function scene(d){if(docked){const v=visitor();return d.owner===v?sAway(d):sVisit(d,v)}
  const a=d.act;
  if(a==='idle')return sIdle(d);if(a==='school'||a==='uni')return sCampus(d);if(a==='transport')return sBus(d);
  if(a==='toilet')return sToilet(d);if(a==='shower')return sShower(d);
+ if(a==='vr')return sVR(d);
  if(a==='groceries')return sShop(d);if(a==='studyuni')return sStudyUni(d);
  if(d.owner==='rocky')({projects:rProjects,studying:rStudy,eating:rEat,cooking:rCook,sleeping:rSleep}[a]||sIdle)(d);
  else({lab:hLab,studying:hStudy,eating:hEat,cooking:hCook,sleeping:hSleep}[a]||sIdle)(d)}
@@ -474,7 +509,7 @@ function worldFor(d){const a=d.act,rr=d.owner==='rocky',room=rr?282:242;if(docke
  if(a==='school'||a==='uni')return 300;if(a==='transport')return 80;if(a==='toilet'||a==='shower')return 110;if(a==='lab')return 172;if(a==='groceries')return 222;if(a==='studyuni')return 120;if(a==='cooking'&&!rr)return 100;return room}
 function focusFor(d){const a=d.act,rr=d.owner==='rocky';
  if(docked){const v=visitor();return d.owner===v?AWAYX[d.owner]:HOSTX[d.owner]+(v==='rocky'?-2:14)}
- if(a==='idle'){const ch=d.chore;return ch&&ch.c.k==='fetch'&&ch.phase==='do'?Math.round((d.me.x+d.dog.x)/2)+8:d.me.x+6}if(a==='school'||a==='uni')return campusX()+6;if(a==='transport')return 40;if(a==='toilet')return 30;if(a==='shower')return 80;if(a==='lab')return labX()+6;if(a==='groceries')return shopX(TICK%270)+14;if(a==='projects'&&rr)return projX()+10;if(a==='studyuni')return 58;
+ if(a==='idle'){const ch=d.chore;return ch&&ch.c.k==='fetch'&&ch.phase==='do'?Math.round((d.me.x+d.dog.x)/2)+8:d.me.x+6}if(a==='school'||a==='uni')return campusX()+6;if(a==='transport')return 40;if(a==='toilet')return 30;if(a==='shower')return 80;if(a==='lab')return labX()+6;if(a==='groceries')return shopX(TICK%270)+14;if(a==='projects'&&rr)return projX()+10;if(a==='vr')return VRX[d.owner]+14;if(a==='studyuni')return 58;
  if(rr)return {studying:196,eating:192,cooking:22,sleeping:246}[a]||d.me.x;
  return {studying:150,eating:210,cooking:40,sleeping:222}[a]||d.me.x}
 
@@ -560,10 +595,10 @@ function draw(d){g=d.ctx;if(d.off){if(!d.offAnim){g.fillStyle='#000';g.fillRect(
  hud(d);ticker(d);toast(d);if(d.onAnim)applyOn(d)}
 
 /* ---------- state ---------- */
-const ACTS={rocky:[['idle','HOME'],['projects','ON A PROJECT'],['studying','STUDYING AT HOME'],['studyuni','STUDYING AT UNI'],['cooking','COOKING'],['eating','EATING'],['groceries','GROCERIES'],['sleeping','SLEEPING'],['toilet','ON THE TOILET'],['shower','SHOWERING'],['school','AT LUT'],['transport','ON THE BUS']],
- her:[['idle','HOME'],['lab','IN THE LAB'],['studying','STUDYING AT HOME'],['studyuni','STUDYING AT UNI'],['cooking','COOKING'],['eating','EATING'],['groceries','GROCERIES'],['sleeping','SLEEPING'],['toilet','ON THE TOILET'],['shower','SHOWERING'],['uni','AT METROPOLIA'],['transport','ON THE BUS']]};
-const CHIP={studying:'Study home',studyuni:'Study uni',projects:'Project',groceries:'Groceries',toilet:'Toilet',shower:'Shower',transport:'Bus',school:'LUT',uni:'Metropolia',lab:'Lab'};
-const ACTCOL={idle:'#ffd9a8',projects:'#4fe0d2',groceries:'#b98cff',studying:'#ffc44d',studyuni:'#ffc44d',cooking:'#ff7a3c',eating:'#ff9a4d',sleeping:'#262a4e',toilet:'#b6e36a',shower:'#7fd0ff',school:'#7ed67a',uni:'#7ed67a',lab:'#9ff0d8',transport:'#ffe066'};
+const ACTS={rocky:[['idle','HOME'],['projects','ON A PROJECT'],['vr','PLAYING QUEST 2'],['studying','STUDYING AT HOME'],['studyuni','STUDYING AT UNI'],['cooking','COOKING'],['eating','EATING'],['groceries','GROCERIES'],['sleeping','SLEEPING'],['toilet','ON THE TOILET'],['shower','SHOWERING'],['school','AT LUT'],['transport','ON THE BUS']],
+ her:[['idle','HOME'],['lab','IN THE LAB'],['vr','PLAYING QUEST 2'],['studying','STUDYING AT HOME'],['studyuni','STUDYING AT UNI'],['cooking','COOKING'],['eating','EATING'],['groceries','GROCERIES'],['sleeping','SLEEPING'],['toilet','ON THE TOILET'],['shower','SHOWERING'],['uni','AT METROPOLIA'],['transport','ON THE BUS']]};
+const CHIP={vr:'Quest 2',studying:'Study home',studyuni:'Study uni',projects:'Project',groceries:'Groceries',toilet:'Toilet',shower:'Shower',transport:'Bus',school:'LUT',uni:'Metropolia',lab:'Lab'};
+const ACTCOL={vr:'#9b7bff',idle:'#ffd9a8',projects:'#4fe0d2',groceries:'#b98cff',studying:'#ffc44d',studyuni:'#ffc44d',cooking:'#ff7a3c',eating:'#ff9a4d',sleeping:'#262a4e',toilet:'#b6e36a',shower:'#7fd0ff',school:'#7ed67a',uni:'#7ed67a',lab:'#9ff0d8',transport:'#ffe066'};
 const label=(o,a)=>(ACTS[o].find(x=>x[0]===a)||['','HOME'])[1];
 function mk(owner,act,mx){return{owner,partner:owner==='rocky'?'her':'rocky',act,sent:owner==='rocky'?12:15,batt:owner==='rocky'?82:64,chg:false,chgAt:-99,lowStage:0,emptyAt:-99,sentAt:-99,notes:[],view:'home',sel:0,msel:1,menuT:0,ov:null,queue:[],inbox:[],off:false,offAt:0,toast:null,flash:-99,hop:0,anchor:null,cam:0,snap:true,
  statusAt:0,chore:null,lastChore:null,me:{x:mx,tx:mx,wait:20,step:0,face:1},dog:{x:mx-16,step:0,flip:false,moving:false},ctx:null,leds:[]}}

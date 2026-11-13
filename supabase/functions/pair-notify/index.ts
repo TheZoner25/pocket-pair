@@ -10,12 +10,12 @@ const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SE
 
 const LABEL: Record<string, Record<string, string>> = {
   rocky: {
-    idle: "Home", projects: "Working on a project", studying: "Studying at home", studyuni: "Studying at uni",
+    idle: "Home", projects: "Working on a project", vr: "Playing Quest 2", studying: "Studying at home", studyuni: "Studying at uni",
     cooking: "Cooking", eating: "Eating", groceries: "Getting groceries", sleeping: "Sleeping",
     toilet: "On the toilet", shower: "Showering", school: "At LUT", transport: "On the bus",
   },
   her: {
-    idle: "Home", lab: "In the lab", studying: "Studying at home", studyuni: "Studying at uni",
+    idle: "Home", lab: "In the lab", vr: "Playing Quest 2", studying: "Studying at home", studyuni: "Studying at uni",
     cooking: "Cooking", eating: "Eating", groceries: "Getting groceries", sleeping: "Sleeping",
     toilet: "On the toilet", shower: "Showering", uni: "At Metropolia", transport: "On the bus",
   },

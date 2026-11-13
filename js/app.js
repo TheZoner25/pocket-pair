@@ -3,7 +3,7 @@
    setAct, setOv, after, crtOn, nameOf, herName, rockyName, NOWWX, soundOn, AC, clockStr. */
 (function () {
   'use strict';
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.2.0';
   const $ = s => document.querySelector(s);
   const other = w => (w === 'rocky' ? 'her' : 'rocky');
   let ME = null, P = null, partnerOnline = null, partnerSeen = 0, netOk = true, loop = null;
